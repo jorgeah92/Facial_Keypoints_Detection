@@ -84,6 +84,41 @@ def show_images(df, indxs, ncols=5, figsize=(15,10), with_keypoints=True):
     plt.show()
 
 
+def get_features(df, dim=2):
+    #Input train or test dataframe and number of dimensions you want features in.
+    #Returns vector of features (pixel intensities for all examples)
+    #TODO: divided by 255 for scaling?
+    
+    images_list = []
+
+    for i in range(0, df.shape[0]):
+        image = df["Image"][i].split(' ')
+        image = ["0" if x == '' else x for x in image]
+        images_list.append(image)
+    
+    images_array = np.array(images_list, dtype="float")
+    if dim==2:
+        images_features = images_array.reshape(-1, 96, 96, 1)
+    else:
+        images_features = images_array
+
+    return images_features
+
+def get_labels(df):
+    #Input only test dataframe
+    #Returns vector of labels (num_examples by 30 column vector of X,Y coords for face keypoints)
+    
+    #Grabbing the corresponding training labels
+    labels_df = df.drop("Image", axis = 1)
+    image_labels = []
+
+    for i in range(0, df.shape[0]):
+        keypoint_coords = labels_df.iloc[i, :]
+        image_labels.append(keypoint_coords)
+    
+    return np.array(image_labels, dtype = "float")
+    
+
 class Normalize(object):
     '''Normalize input images'''
     def __call__(self, sample):
@@ -91,7 +126,4 @@ class Normalize(object):
         return {'image': image / 255., # scale to [0, 1]
                 'keypoints': keypoints}
         
-
-
-
 
