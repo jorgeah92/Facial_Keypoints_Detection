@@ -5,6 +5,11 @@ import pandas as pd
 from IPython.display import clear_output
 from time import sleep
 import os
+from sklearn import metrics
+import seaborn as sns
+import cv2
+from math import sin, cos, pi
+
 from keras.layers import Conv2D,Dropout,Dense,Flatten
 from keras.models import Sequential
 from keras.layers.advanced_activations import LeakyReLU
@@ -12,7 +17,6 @@ from keras.models import Sequential, Model
 from keras.layers import Activation, Convolution2D, MaxPooling2D, BatchNormalization, Flatten, Dense, Dropout, Conv2D,MaxPool2D, ZeroPadding2D
 
 from keras.models import model_from_json
-
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from keras.preprocessing.image import ImageDataGenerator
@@ -38,6 +42,7 @@ warnings.filterwarnings('ignore')
 
 data_dir = 'data_files/'
 lookid_data = pd.read_csv(data_dir + 'IdLookupTable.csv')
+sample_sub = pd.read_csv(data_dir + 'SampleSubmission.csv')
 train_data1 = pd.read_parquet(data_dir + 'train_data_1.gzip')
 train_data2 = pd.read_parquet(data_dir + 'train_data_2.gzip')
 train_data = pd.concat([train_data1, train_data2])
@@ -90,9 +95,11 @@ def show_images(df, indxs, ncols=5, figsize=(15,10), with_keypoints=True):
 
 
 def get_features(df, dim=2):
-    #Input train or test dataframe and number of dimensions you want features in.
-    #Returns vector of features (pixel intensities for all examples)
-    #TODO: divided by 255 for scaling?
+    """
+    Input train or test dataframe and number of dimensions you want features in.
+    Returns vector of features (pixel intensities for all examples)
+    TODO: divided by 255 for scaling?
+    """
     images_list = []
     df1 = df.copy()
     df1.reset_index(inplace = True)
@@ -108,9 +115,11 @@ def get_features(df, dim=2):
     return images_features
 
 def get_labels(df):
-    #Input only test dataframe
-    #Returns vector of labels (num_examples by 30 column vector of X,Y coords for face keypoints)
-    #Grabbing the corresponding training labels
+    '''
+    Input only test dataframe
+    Returns vector of labels (num_examples by 30 column vector of X,Y coords for face keypoints)
+    Grabbing the corresponding training labels
+    '''
     labels_df = df.copy()
     labels_df = labels_df.drop('Image',axis = 1)
     y_train = []
@@ -118,6 +127,15 @@ def get_labels(df):
         y = labels_df.iloc[i,:]
         y_train.append(y)
     return np.array(y_train,dtype = 'float')
+
+def plot_img(image, label, axis):
+    '''
+    Simplfied version of show_images
+    Shows one image
+    '''
+    image = image.reshape(96,96)
+    axis.imshow(image, cmap='gray')
+    axis.scatter(label[0::2], label[1::2], s=24, marker ='.', c='r')
     
 
 
